@@ -8,9 +8,9 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 
-using NFT.Logger;
-using NFT.Core;
-using NFT.Net;
+using GoodBot.Logger;
+using GoodBot.Core;
+using GoodBot.Net;
 using System.Runtime.Serialization;
 
 namespace NFT_Core.NFT.Net
@@ -115,7 +115,7 @@ namespace NFT_Core.NFT.Net
 
                         // Deserialise & execute command in new thread
                         c = Helper.FromMemoryStream<Command>(ms);
-                        Task.Run(() => CommandHandler.Handle(c, client));
+                        Task.Run(() => CommandHandler.Handle(c));
                         
                     }
                     catch (SerializationException e)

@@ -5,22 +5,22 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
-using NFT.Core;
-using NFT.Logger;
+using GoodBot.Core;
+using GoodBot.Logger;
 
-namespace NFT.Net
+namespace GoodBot.Net
 {
     /// <summary>
-    /// Listens for Command messages from NFT_Slave application
+    /// Listens for Command messages from goodbot client application
     /// </summary>
-    public class SlaveListener
+    public class ClientListener
     {
         private NetworkStream stream; 
         private IPEndPoint ep;
         private TcpClient client; // The specific TcpClient object we are listening too
         private bool running = false;
 
-        public SlaveListener()
+        public ClientListener()
         {
             // Load required slave data
             //client = c.Connection;
@@ -49,7 +49,7 @@ namespace NFT.Net
             // Command recieving loop
             while (running)
             {
-                byte[] buffer = new byte[NFT.Core.Constants.COMMAND_BUFFER_SIZE];
+                byte[] buffer = new byte[GoodBot.Core.Constants.COMMAND_BUFFER_SIZE];
                 using (MemoryStream ms = new MemoryStream())
                 {
                     int bytesRead = 0;
@@ -68,7 +68,7 @@ namespace NFT.Net
                         c = Helper.FromMemoryStream<Command>(ms);
 
                         // Handle command
-                        Task.Run(() => CommandHandler.Handle(c, client));
+                        Task.Run(() => CommandHandler.Handle(c));
                     }
                     catch (SerializationException e)
                     {

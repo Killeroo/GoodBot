@@ -2,10 +2,10 @@
 using System.Net;
 using System.Net.Sockets;
 
-using NFT.Core;
-using NFT.Logger;
+using GoodBot.Core;
+using GoodBot.Logger;
 
-namespace NFT.Net
+namespace GoodBot.Net
 {
 
     /// <summary>

@@ -4,7 +4,7 @@ using System.Net.Sockets;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 
-namespace NFT.Core
+namespace GoodBot.Core
 {
 
     /// <summary>

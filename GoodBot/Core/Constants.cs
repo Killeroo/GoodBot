@@ -1,4 +1,4 @@
-﻿namespace NFT.Core
+﻿namespace GoodBot.Core
 {
     /// <summary>
     /// Stores NFT constant variables

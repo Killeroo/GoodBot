@@ -1,21 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading;
-
-using NFT.Core;
-using NFT.Logger;
-using System.IO;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
-namespace NFT.Net
-{
-    // Stores all client operations and functions
-    public class Client
-    {
+using GoodBot.Core;
+using GoodBot.Logger;
 
+namespace GoodBot.Net
+{
+    /// <summary>
+    /// Class for recieving Command messages from GoodBot server application
+    /// </summary>
+    public class ServerListener
+    {
         public bool IsListening { get; private set; }
         public bool IsConnected { get; private set; }
         public TcpClient Master { get; private set; }
@@ -25,14 +24,46 @@ namespace NFT.Net
         private NetworkStream stream;
         private bool running;
 
-        public Client() { }
+        public ServerListener()
+        {
+            listener = new TcpListener(IPAddress.Parse(Helper.GetLocalIPAddress()), GoodBot.Core.Constants.COMMAND_LISTEN_PORT);
+        }
 
-        // Listens for a NFT Server/Master
-        public void Listen()
+        public void Start()
+        {
+            running = true;
+
+            while (running)
+            {
+                ListeningLoop();
+                CommandLoop();
+            }
+        }
+        public void Stop()
+        {
+            Log.Info("Stopping CommandListener...");
+            running = false;
+
+            // Cleanup
+            try
+            {
+                Master.Close();
+                stream.Close();
+            }
+            catch (NullReferenceException e)
+            {
+                Log.Error(new Error(e));
+            }
+        }
+
+        /// <summary>
+        /// Listens for TCP connection for NFT master
+        /// </summary>
+        private void ListeningLoop()
         {
             // Start Tcplistener
             listener.Start();
-            Log.Info("Listening for NFT Master on " + Helper.GetLocalIPAddress() + ":" + NFT.Core.Constants.COMMAND_LISTEN_PORT + "...");
+            Log.Info("Listening for NFT Master on " + Helper.GetLocalIPAddress() + ":" + GoodBot.Core.Constants.COMMAND_LISTEN_PORT + "...");
             IsListening = true;
 
             // Listening loop
@@ -69,16 +100,19 @@ namespace NFT.Net
             listener.Stop();
             IsListening = false;
         }
-        // Recieves and executes commands from a server
-        public void RecvCommands()
+        /// <summary>
+        /// Listens for Commands from NFT master
+        /// </summary>
+        private void CommandLoop()
         {
             Command c = new Command();
-            Log.Info("Listening to " + ep.Address.ToString() + "...");
+            IsConnected = true;
+            Log.Info("Listening to " + masterEP.Address.ToString() + "...");
 
             // Command recieving loop
             while (running)
             {
-                byte[] buffer = new byte[NFT.Core.Constants.COMMAND_BUFFER_SIZE];
+                byte[] buffer = new byte[GoodBot.Core.Constants.COMMAND_BUFFER_SIZE];
                 using (MemoryStream ms = new MemoryStream())
                 {
                     int bytesRead = 0;
@@ -97,41 +131,39 @@ namespace NFT.Net
                         c = Helper.FromMemoryStream<Command>(ms);
 
                         // Handle command
-                        Task.Run(() => CommandHandler.Handle(c, client));
+                        Task.Run(() => CommandHandler.Handle(c));
                     }
                     catch (SerializationException e)
                     {
                         Log.Error(new Error(e, "Cannot parse master stream"));
-                        running = false;
+                        IsConnected = false;
                     }
                     catch (IOException e)
                     {
                         Log.Error(new Error(e, "Connection failure"));
-                        running = false;
+                        IsConnected = false;
                     }
                     catch (ObjectDisposedException e)
                     {
                         Log.Error(new Error(e, "Object failure"));
-                        running = false;
+                        IsConnected = false;
                     }
                     catch (Exception e)
                     {
                         Log.Error(new Error(e));
+                        IsConnected = false;
                     }
 
                     // Disconnect on quit flags
-                    if (c.Type == CommandType.Quit)
+                    if (c.Type == CommandType.Quit || IsConnected == false)
                         break;
                 }
             }
 
             // Clean up
-            //Log.Info(ep.Address + ":" + ep.Port + " disconnected");
+            Log.Info(masterEP.Address + ":" + masterEP.Port + " disconnected");
+            IsConnected = false;
         }
-
-        private void TestConnection()
-        {
-
-        } // MODIFY
+        private void TestConnection() { }
     }
 }

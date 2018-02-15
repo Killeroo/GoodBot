@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 
-using NFT.Rsync;
-
-namespace NFT.Core
+namespace GoodBot.Core
 {
     /// <summary>
     /// Command class for communicating instructions between NFT Master and Slave applications
@@ -18,8 +16,7 @@ namespace NFT.Core
         public IPAddress Source { get; set; } // IP address of sender
         public IPAddress Destination { get; set; } // IP address of recipient
         public string Message { get; set; } = ""; // (Optional) text to be displayed if INFO type command
-        public int Seq { get; set; } = 0; // Sequence number
-        public RsyncStream Stream { get; private set; } = null; // (Optional) stores Rsync data
+        public int Seq { get; set; } = 0; // Sequence number/ (Optional) stores Rsync data
 
         // Constructors
         public Command()
@@ -72,12 +69,6 @@ namespace NFT.Core
                 Files[r] = Files[x];
                 Files[x] = value;
             }
-        }
-
-        public void AddStream(RsyncStream rs)
-        {
-            Stream = rs;
-            Type = CommandType.RsyncStream;
         }
 
     }

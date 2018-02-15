@@ -1,69 +1,36 @@
 ﻿using System;
-using System.IO;
 using System.Net;
 using System.Net.Sockets;
+
+using GoodBot.Core;
+using GoodBot.Logger;
+using System.IO;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
-using NFT.Core;
-using NFT.Logger;
-
-namespace NFT.Net
+namespace GoodBot.Net
 {
-    /// <summary>
-    /// Class for recieving Command messages from NFT master application
-    /// </summary>
-    public class MasterListener
+    // Stores all client operations and functions
+    public class Client
     {
+
         public bool IsListening { get; private set; }
         public bool IsConnected { get; private set; }
-        public TcpClient Master { get; private set; }
+        public TcpClient Server { get; private set; }
 
         private TcpListener listener;
-        private IPEndPoint masterEP;
+        private IPEndPoint serverEP;
         private NetworkStream stream;
         private bool running;
 
-        public MasterListener()
-        {
-            listener = new TcpListener(IPAddress.Parse(Helper.GetLocalIPAddress()), NFT.Core.Constants.COMMAND_LISTEN_PORT);
-        }
+        public Client() { }
 
-        public void Start()
-        {
-            running = true;
-
-            while (running)
-            {
-                ListeningLoop();
-                CommandLoop();
-            }
-        }
-        public void Stop()
-        {
-            Log.Info("Stopping CommandListener...");
-            running = false;
-
-            // Cleanup
-            try
-            {
-                Master.Close();
-                stream.Close();
-            }
-            catch (NullReferenceException e)
-            {
-                Log.Error(new Error(e));
-            }
-        }
-
-        /// <summary>
-        /// Listens for TCP connection for NFT master
-        /// </summary>
-        private void ListeningLoop()
+        // Listens for a Server/Master
+        public void Listen()
         {
             // Start Tcplistener
             listener.Start();
-            Log.Info("Listening for NFT Master on " + Helper.GetLocalIPAddress() + ":" + NFT.Core.Constants.COMMAND_LISTEN_PORT + "...");
+            Log.Info("Listening for NFT Master on " + Helper.GetLocalIPAddress() + ":" + GoodBot.Core.Constants.COMMAND_LISTEN_PORT + "...");
             IsListening = true;
 
             // Listening loop
@@ -71,14 +38,14 @@ namespace NFT.Net
             {
                 try
                 {
-                    Master = listener.AcceptTcpClient();
+                    Server = listener.AcceptTcpClient();
 
-                    if (Master != null)
+                    if (Server != null)
                     {
-                        // Store NFT Master endpoint
-                        masterEP = (IPEndPoint)Master.Client.RemoteEndPoint;
-                        stream = Master.GetStream();
-                        Log.Info(masterEP.Address.ToString() + ":" + masterEP.Port.ToString() + " [NFT Master] connected");
+                        // Store Server endpoint
+                        serverEP = (IPEndPoint)Server.Client.RemoteEndPoint;
+                        stream = Server.GetStream();
+                        Log.Info(serverEP.Address.ToString() + ":" + serverEP.Port.ToString() + " [NFT Master] connected");
                         break; // Exit listening loop
                     }
                 }
@@ -100,19 +67,16 @@ namespace NFT.Net
             listener.Stop();
             IsListening = false;
         }
-        /// <summary>
-        /// Listens for Commands from NFT master
-        /// </summary>
-        private void CommandLoop()
+        // Recieves and executes commands from a server
+        public void RecvCommands()
         {
             Command c = new Command();
-            IsConnected = true;
-            Log.Info("Listening to " + masterEP.Address.ToString() + "...");
+            Log.Info("Listening to " + serverEP.Address.ToString() + "...");
 
             // Command recieving loop
             while (running)
             {
-                byte[] buffer = new byte[NFT.Core.Constants.COMMAND_BUFFER_SIZE];
+                byte[] buffer = new byte[GoodBot.Core.Constants.COMMAND_BUFFER_SIZE];
                 using (MemoryStream ms = new MemoryStream())
                 {
                     int bytesRead = 0;
@@ -131,39 +95,41 @@ namespace NFT.Net
                         c = Helper.FromMemoryStream<Command>(ms);
 
                         // Handle command
-                        Task.Run(() => CommandHandler.Handle(c, Master));
+                        Task.Run(() => CommandHandler.Handle(c));
                     }
                     catch (SerializationException e)
                     {
                         Log.Error(new Error(e, "Cannot parse master stream"));
-                        IsConnected = false;
+                        running = false;
                     }
                     catch (IOException e)
                     {
                         Log.Error(new Error(e, "Connection failure"));
-                        IsConnected = false;
+                        running = false;
                     }
                     catch (ObjectDisposedException e)
                     {
                         Log.Error(new Error(e, "Object failure"));
-                        IsConnected = false;
+                        running = false;
                     }
                     catch (Exception e)
                     {
                         Log.Error(new Error(e));
-                        IsConnected = false;
                     }
 
                     // Disconnect on quit flags
-                    if (c.Type == CommandType.Quit || IsConnected == false)
+                    if (c.Type == CommandType.Quit)
                         break;
                 }
             }
 
             // Clean up
-            Log.Info(masterEP.Address + ":" + masterEP.Port + " disconnected");
-            IsConnected = false;
+            //Log.Info(ep.Address + ":" + ep.Port + " disconnected");
         }
-        private void TestConnection() { }
+
+        private void TestConnection()
+        {
+
+        } // MODIFY
     }
 }

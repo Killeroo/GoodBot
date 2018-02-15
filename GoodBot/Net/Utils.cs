@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Net;
 using System.Threading;
 
-using NFT.Core;
-using NFT.Logger;
+using GoodBot.Core;
+using GoodBot.Logger;
 
-namespace NFT.Net
+namespace GoodBot.Net
 {
     public static class Utils
     {

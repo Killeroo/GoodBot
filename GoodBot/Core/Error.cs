@@ -2,7 +2,7 @@
 using System.Net;
 using System.Linq;
 
-namespace NFT.Core
+namespace GoodBot.Core
 {
 
     /// <summary>
