@@ -1,7 +1,7 @@
 
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GoodBot", "GoodBot\GoodBot.csproj", "{6CD11D3A-FFAB-4138-A5A4-F81822464B67}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GoodBot", "src\GoodBot.csproj", "{6CD11D3A-FFAB-4138-A5A4-F81822464B67}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
